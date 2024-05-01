@@ -169,10 +169,77 @@ def aggregate(database:str,collection:str, pipeline:list):
 
 
 def count(database:str, collection:str, criteria=CRITERIA):
+    """
+    The function `count` connects to a MongoDB database, counts the number of documents in a specified
+    collection based on given criteria, and returns the count.
+    
+    :param database: The `database` parameter is a string that represents the name of the MongoDB
+    database you want to connect to
+    :type database: str
+    :param collection: The `collection` parameter in the `count` function refers to the name of the
+    collection within the specified MongoDB database where you want to count the documents that match
+    the given criteria. It is a string that specifies the collection name in which the count operation
+    will be performed
+    :type collection: str
+    :param criteria: The `criteria` parameter in the `count` function is used to specify the conditions
+    that documents must meet to be included in the count operation. It is typically a query document
+    that filters the documents in the collection based on certain criteria. If no criteria is provided,
+    the function will count all documents in
+    :return: The count of documents in the specified collection that match the given criteria is being
+    returned by the `count` function.
+    """
     try:
         db ,client = connect_to_mongodb(database)
         data = db[collection].count(criteria)
         # close_mongodb_connection(client)
         return data
     except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
+        raise ValueError(f'Database operation failure {e}')
+    
+
+def insert_many(database:str,collection:str, datas:list, datalist=False):
+    """
+    The function `insert_many` inserts a list of data into a MongoDB collection, generates unique
+    identifiers, timestamps, and handles exceptions related to database operations.
+    
+    :param database: The `database` parameter in the `insert_many` function is a string that represents
+    the name of the MongoDB database where you want to insert data
+    :type database: str
+    :param collection: The `collection` parameter in the `insert_many` function refers to the name of
+    the collection in the MongoDB database where you want to insert the data. It is a required parameter
+    that specifies the target collection for inserting the provided data
+    :type collection: str
+    :param datas: The `datas` parameter in the `insert_many` function is a list of dictionaries
+    containing the data that you want to insert into the specified MongoDB collection. Each dictionary
+    represents a single document to be inserted into the collection
+    :type datas: list
+    :param datalist: The `datalist` parameter in the `insert_many` function is a boolean flag that
+    determines whether the function should return the list of records after inserting the data into the
+    MongoDB collection. If `datalist` is set to `True`, the function will return the list of records by
+    calling the `, defaults to False (optional)
+    :return: The function `insert_many` returns a list of record IDs that were inserted into the MongoDB
+    collection. If the `datalist` parameter is set to `True`, it also returns the result of the `finds`
+    function for the specified database and collection.
+    """
+    try:
+        db ,client = connect_to_mongodb(database)
+        datas_= []
+        records_ids = []
+        # f"{get_reference_key()}s" = []
+        # exec(f"{variable_name} = '{[]}'")
+        for data in datas :
+            date = datetime.datetime.now()
+            record_id = str(uuid.uuid4())
+            data['created_at'] = date
+            data['updated_at'] = date
+            data['id'] = next_record_identifier_value(database,collection)
+            data[get_reference_key()] = record_id
+            datas_.append[data]
+            records_ids.append(record_id)
+        db[collection].insert_many(datas_)
+        close_mongodb_connection(client)
+        if datalist:
+            return finds(database, collection)
+        return records_ids
+    except (ConnectionFailure, AutoReconnect, OperationFailure, DuplicateKeyError) as e:
         raise ValueError(f'Database operation failure {e}')
