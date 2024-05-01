@@ -243,3 +243,73 @@ def insert_many(database:str,collection:str, datas:list, datalist=False):
         return records_ids
     except (ConnectionFailure, AutoReconnect, OperationFailure, DuplicateKeyError) as e:
         raise ValueError(f'Database operation failure {e}')
+
+
+def delete_one(database:str, collection:str, criteria, datalist=False):
+    """
+    The function `delete_one` deletes a single document from a MongoDB collection based on specified
+    criteria and returns True upon successful deletion.
+    
+    :param database: The `database` parameter in the `delete_one` function is a string that represents
+    the name of the MongoDB database where the operation will be performed
+    :type database: str
+    :param collection: The `collection` parameter in the `delete_one` function refers to the name of the
+    collection within the specified database where you want to delete a document based on the provided
+    criteria
+    :type collection: str
+    :param criteria: The `criteria` parameter in the `delete_one` function is used to specify the
+    condition that documents in the collection must meet in order to be deleted. It is typically a
+    dictionary that contains the fields and values that the documents must match in order to be deleted.
+    For example, if you want to
+    :param datalist: The `datalist` parameter in the `delete_one` function is a boolean flag that
+    indicates whether the function should return the list of remaining documents in the collection after
+    deleting one document. If `datalist` is set to `True`, the function will return the list of
+    documents. If `datal, defaults to False (optional)
+    :return: The function `delete_one` will return `True` if the deletion operation is successful. If
+    the `datalist` parameter is set to `True`, it will also return the result of the `finds` function
+    for the specified database and collection.
+    """
+    try:
+        db ,client = connect_to_mongodb(database)
+        db[collection].delete_one(criteria)
+        close_mongodb_connection(client)
+        if datalist:
+            return finds(database, collection)
+        return True
+    except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
+       raise ValueError(f'Database operation failure {e}')
+   
+
+def delete_many(database, collection, criteria, datalist=True):
+    """
+    The function `delete_many` deletes multiple documents from a MongoDB collection based on specified
+    criteria and returns the remaining documents if `datalist` is True.
+    
+    :param database: The `database` parameter in the `delete_many` function refers to the name of the
+    MongoDB database that you want to connect to and perform operations on. It is used to specify the
+    database where the collection is located and where the deletion operation will take place
+    :param collection: The `collection` parameter in the `delete_many` function refers to the name of
+    the collection within the specified database where the deletion operation will be performed. It is
+    the specific group of documents within a database where data is stored
+    :param criteria: The `criteria` parameter in the `delete_many` function is used to specify the
+    conditions that documents must meet in order to be deleted from the specified collection in the
+    database. It is typically a dictionary containing key-value pairs that represent the conditions for
+    deletion. Only documents that match all the criteria specified in
+    :param datalist: The `datalist` parameter in the `delete_many` function is a boolean flag that
+    determines whether the function should return the list of documents that remain in the collection
+    after the deletion operation is performed. If `datalist` is set to `True`, the function will return
+    the list of remaining documents, defaults to True (optional)
+    :return: If the `datalist` parameter is `True`, the function will return the result of the `finds`
+    function called with the `database` and `collection` parameters. If the `datalist` parameter is
+    `False`, the function will return `True`.
+    """
+    try:
+        db ,client = connect_to_mongodb(database)
+        db[collection].delete_many(criteria)
+        close_mongodb_connection(client)
+        if datalist:
+            return finds(database, collection)
+        else:
+            True
+    except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
+       raise ValueError(f'Database operation failure {e}')
