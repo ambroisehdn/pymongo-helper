@@ -9,7 +9,7 @@ PROJECTION = {'_id': False, 'id': True}
 CRITERIA = {}
 SORT = [("created_at", pymongo.DESCENDING)]
 
-def find_one(database,collection, criteria:dict=CRITERIA, projection:dict=PROJECTION):
+def find_one(database:str,collection:str, criteria:dict=CRITERIA, projection:dict=PROJECTION):
     """
     The function `find_one` connects to a MongoDB database, retrieves one document from a specified
     collection based on given criteria and projection, and formats the result using a datetime formatter
@@ -94,7 +94,7 @@ def finds(database:str, collection:str, projection:dict=PROJECTION, criteria:dic
     return datas
 
  
-def insert_one(database, collection, data, datalist=True):
+def insert_one(database:str, collection:str, data, datalist=True):
     """
     The function `insert_one` inserts a document into a MongoDB collection with additional fields like
     creation timestamp and unique identifiers, and returns either a list of documents or a specific
@@ -134,3 +134,35 @@ def insert_one(database, collection, data, datalist=True):
     except (ConnectionFailure, AutoReconnect, OperationFailure,DuplicateKeyError) as e:
         raise ValueError(f'Database operation failure {e}')
     
+
+def aggregate(database:str,collection:str, pipeline:list):
+    """
+    The function `aggregate` connects to a MongoDB database, performs an aggregation operation on a
+    specified collection using a given pipeline, and returns the aggregated data.
+    
+    :param database: The `database` parameter is a string that represents the name of the MongoDB
+    database you want to connect to
+    :type database: str
+    :param collection: The `collection` parameter in the `aggregate` function refers to the name of the
+    collection within the specified MongoDB database where the aggregation operation will be performed.
+    It is a string that represents the name of the collection where the data is stored or from where the
+    data will be aggregated using the specified pipeline
+    :type collection: str
+    :param pipeline: The `pipeline` parameter in the `aggregate` function is a list of aggregation
+    stages that define the operations to be performed on the data in the specified collection in the
+    MongoDB database. These stages can include operations like filtering, grouping, sorting, and
+    transforming the data before returning the results. Each stage in
+    :type pipeline: list
+    :return: The function `aggregate` is returning a list of datetime objects after aggregating data
+    from the specified collection in the MongoDB database using the provided pipeline.
+    """
+    try:
+        db ,client = connect_to_mongodb(database)
+        datas = [
+            datetime(data) for data in db[collection].aggregate(pipeline)
+        ]
+        close_mongodb_connection(client)
+        return datas
+    except (ConnectionFailure, AutoReconnect, OperationFailure,DuplicateKeyError) as e:
+        raise ValueError(f'Database operation failure {e}')
+
