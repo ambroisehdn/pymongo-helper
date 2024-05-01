@@ -313,3 +313,50 @@ def delete_many(database, collection, criteria, datalist=True):
             True
     except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
        raise ValueError(f'Database operation failure {e}')
+   
+
+def update_one(database,collection, criteria,update_operation:str, data:dict, datalist=True):
+    """
+    The function `update_one` updates a document in a MongoDB collection based on specified criteria and
+    returns the updated data or a list of documents.
+    
+    :param database: The `database` parameter in the `update_one` function refers to the name of the
+    database in which the collection is located. It is used to specify the database where the update
+    operation will be performed
+    :param collection: The `collection` parameter in the `update_one` function refers to the name of the
+    collection within the specified database where the update operation will be performed. It is the
+    specific subset of data within the database that you want to update
+    :param criteria: The `criteria` parameter in the `update_one` function is used to specify the
+    selection criteria for the document that needs to be updated in the MongoDB collection. It is a
+    dictionary that defines the conditions that the document must meet in order to be updated. For
+    example, if you want to update a
+    :param update_operation: The `update_operation` parameter in the `update_one` function specifies the
+    type of update operation to be performed on the specified document in the MongoDB collection. It can
+    take values such as `''`, `''`, or `''`, which are MongoDB update operators used to
+    :type update_operation: str
+    :param data: The `data` parameter in the `update_one` function is a dictionary that contains the
+    information you want to update in the MongoDB collection. It should include key-value pairs where
+    the keys represent the fields you want to update and the values represent the new values you want to
+    set for those fields
+    :type data: dict
+    :param datalist: The `datalist` parameter in the `update_one` function is a boolean flag that
+    determines whether the function should return a list of data after performing the update operation.
+    If `datalist` is set to `True`, the function will return the updated list of data from the specified
+    `collection`, defaults to True (optional)
+    :return: If `datalist` is `True`, the function will return the result of the `finds` function with
+    the specified `database` and `collection`. If `datalist` is `False`, it will return `True` after
+    closing the MongoDB connection.
+    """
+    db = client[database]
+    try:
+        data['updated_at'] = datetime.datetime.now()
+        db ,client = connect_to_mongodb(database)
+        #'$pull', '$push','$set'
+        db[collection].update_one(criteria, {update_operation: data})
+        if datalist:
+            return finds(database, collection)
+        else:
+            close_mongodb_connection(client)
+            return True
+    except (ConnectionFailure, AutoReconnect, OperationFailure,DuplicateKeyError) as e:
+       raise ValueError(f'Database operation failure {e}')
