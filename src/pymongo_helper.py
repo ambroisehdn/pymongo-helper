@@ -9,6 +9,38 @@ PROJECTION = {'_id': False, 'id': True}
 CRITERIA = {}
 SORT = [("created_at", pymongo.DESCENDING)]
 
+def find_one(database,collection, criteria:dict=CRITERIA, projection:dict=PROJECTION):
+    """
+    The function `find_one` connects to a MongoDB database, retrieves one document from a specified
+    collection based on given criteria and projection, and formats the result using a datetime formatter
+    before returning it.
+    
+    :param database: The `database` parameter in the `find_one` function refers to the name of the
+    MongoDB database you want to connect to and perform the find operation on. It is a required
+    parameter for the function and should be a string representing the name of the database
+    :param collection: The `collection` parameter in the `find_one` function refers to the name of the
+    collection within the specified database where the search operation will be performed. It is the
+    specific group of documents within a database where data is stored
+    :param criteria: The `criteria` parameter in the `find_one` function is a dictionary that specifies
+    the conditions that the document must meet in order to be retrieved from the MongoDB collection. It
+    is used to filter the documents in the collection based on the specified criteria. The documents
+    that match the criteria will be returned by
+    :type criteria: dict
+    :param projection: The `projection` parameter in the `find_one` function is used to specify which
+    fields should be included or excluded in the query result. It is a dictionary where the keys
+    represent the fields to be included (with a value of 1) or excluded (with a value of 0) in
+    :type projection: dict
+    :return: The function `find_one` is returning the result of the MongoDB query after formatting the
+    datetime if the data is found, or it returns `None` if no data is found.
+    """
+    try:
+        db,client = connect_to_mongodb(database)
+        data = db[collection].find_one(criteria, projection)
+        close_mongodb_connection(client)
+        return datetime_formater(data) if data else data
+    except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
+        raise ValueError(f'Database operation failure {e}')
+            
 def finds(database:str, collection:str, projection:dict=PROJECTION, criteria:dict=CRITERIA,sort:list=SORT, limit=0,pager:dict=None):
     """
     This Python function retrieves data from a MongoDB database based on specified criteria, projection,
@@ -65,25 +97,26 @@ def finds(database:str, collection:str, projection:dict=PROJECTION, criteria:dic
 def insert_one(database, collection, data, datalist=True):
     """
     The function `insert_one` inserts a document into a MongoDB collection with additional fields like
-    creation and update timestamps, unique identifiers, and returns the inserted data or a list of all
-    documents in the collection.
+    creation timestamp and unique identifiers, and returns either a list of documents or a specific
+    reference key based on the input parameter.
     
     :param database: The `database` parameter in the `insert_one` function refers to the name of the
     MongoDB database where you want to insert the data
     :param collection: The `collection` parameter in the `insert_one` function refers to the name of the
-    collection in the MongoDB database where you want to insert the data. It is the specific container
-    within a database that holds your documents
+    collection in the MongoDB database where you want to insert the data. It is a required parameter for
+    specifying the target collection for inserting the data
     :param data: The `data` parameter in the `insert_one` function is a dictionary containing the
-    information that you want to insert into the specified collection in the MongoDB database. This
-    dictionary should include the data fields that you want to store in the database document
+    information that you want to insert into the specified collection in the MongoDB database. It
+    typically includes key-value pairs representing the fields and values of the document you want to
+    insert
     :param datalist: The `datalist` parameter in the `insert_one` function is a boolean flag that
-    determines whether the function should return a list of all records in the specified collection
-    after inserting the new data. If `datalist` is set to `True`, the function will return the list of
-    records along with, defaults to True (optional)
-    :return: If `datalist` is `True`, the function will return the result of the `finds` function with
-    the specified `database` and `collection`, along with a boolean value `True`. If `datalist` is
-    `False`, the function will return the value of the key obtained from `get_reference_key()` in the
-    inserted `data`.
+    determines whether the function should return a list of data after inserting the new data or just
+    the reference key of the inserted data. If `datalist` is set to `True`, the function will return a
+    list, defaults to True (optional)
+    :return: If `datalist` is `True`, the function will return the result of calling the `finds`
+    function with the `database` and `collection` parameters. If `datalist` is `False`, the function
+    will return the value associated with the key returned by the `get_reference_key` function from the
+    `data` dictionary.
     """
     try:
         db ,client = connect_to_mongodb(database)
@@ -95,7 +128,7 @@ def insert_one(database, collection, data, datalist=True):
         db[collection].insert_one(data)
         close_mongodb_connection(client)
         if datalist:
-            return finds(database, collection), True
+            return finds(database, collection)
         else:
             return data[get_reference_key()]
     except (ConnectionFailure, AutoReconnect, OperationFailure,DuplicateKeyError) as e:
