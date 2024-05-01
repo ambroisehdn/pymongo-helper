@@ -166,3 +166,13 @@ def aggregate(database:str,collection:str, pipeline:list):
     except (ConnectionFailure, AutoReconnect, OperationFailure,DuplicateKeyError) as e:
         raise ValueError(f'Database operation failure {e}')
 
+
+
+def count(database:str, collection:str, criteria=CRITERIA):
+    try:
+        db ,client = connect_to_mongodb(database)
+        data = db[collection].count(criteria)
+        # close_mongodb_connection(client)
+        return data
+    except (ConnectionFailure, AutoReconnect, OperationFailure) as e:
+        raise ValueError(f'Database operation failure {e}')
