@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pymongo-helper',
-    version='0.0.1',
+    version='0.0.3',
     author='ambroisehdn',
     author_email='contact@ambroisehdn.me',
     description='The pymongo helper package is a Python library designed to simplify and streamline interactions with MongoDB databases using the PyMongo driver.',
